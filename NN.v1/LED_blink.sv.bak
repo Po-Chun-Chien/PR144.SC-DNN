@@ -1,0 +1,43 @@
+module LED_blink(
+	input clk,
+	input reset_n,
+	output [7:0] oled
+);
+	logic [23:0] cnt_w, cnt_r;
+	logic [7:0] led_w, led_r;
+	logic mode_w, mode_r;
+	
+	assign oled = led_r;
+	always_comb begin
+		if(cnt_r=='d15000000) begin
+			cnt_w = 'd0;
+			if(mode_r) begin
+				led_w = { led_r[6:0], 'd1 };				
+			end else begin
+				led_w = { 'd0, led_r[7:1]};
+			end
+			
+			if(led_r == 8'b0111_1111 || led_r == 8'b0000_0001) begin
+				mode_w = ~mode_r;
+			end else begin
+				mode_w = mode_r;
+			end
+		end else begin
+			cnt_w = cnt_r + 'd1;
+			mode_w = mode_r;
+			led_w = led_r;
+		end
+	end
+	
+	always_ff @(posedge clk or negedge reset_n) begin
+		if (reset_n) begin
+			cnt_r <= 'd0;
+			led_r <= 'd0;
+			mode_r <= 'd1;
+		end else begin
+			cnt_r <= cnt_w;
+			led_r <= led_w;
+			mode_r <= mode_w;
+		end
+	end
+endmodule
